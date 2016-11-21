@@ -1,0 +1,151 @@
+package samplerate
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func TestInitAndDestroy(t *testing.T) {
+	channels := 2
+	src, err := New(SRC_SINC_FASTEST, channels)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	chs, err := src.GetChannels()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if chs != channels {
+		t.Fatal("unexpected amount of channels")
+	}
+
+	err = src.Reset()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = Delete(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestProcessInvalidInput(t *testing.T) {
+	src, err := New(SRC_SINC_FASTEST, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = src.Process("hello", 1.0, true)
+	if err == nil {
+		t.Fatal("must only accept slices")
+	}
+
+	_, err = src.Process([]byte{1, 2}, 1.0, true)
+	if err == nil {
+		t.Fatal("expected error on invalid input type []byte")
+	}
+
+	_, err = src.Process([]int8{1, 2}, 1.0, true)
+	if err == nil {
+		t.Fatal("expected error on invalid input type []int8")
+	}
+
+	err = Delete(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestProcess(t *testing.T) {
+	src, err := New(SRC_SINC_FASTEST, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	input := []float32{0.1, -0.5, 0.2, -0.3}
+	output, err := src.Process(input, 2.0, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expOutput := []float32{0.11488709,
+		-0.46334597, 0.18373828, -0.48996875, 0.1821644,
+		-0.32879135, 0.10804618, -0.11150829}
+
+	if !reflect.DeepEqual(output, expOutput) {
+		t.Log("input:", input)
+		t.Log("output:", output)
+		t.Fatal("unexpected output")
+	}
+
+	err = Delete(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetConverterName(t *testing.T) {
+	name, err := GetName(SRC_LINEAR)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "Linear Interpolator" {
+		t.Fatal("Unexpected string")
+	}
+}
+
+func TestGetConverterDescription(t *testing.T) {
+	desc, err := GetDescription(SRC_LINEAR)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if desc != "Linear interpolator, very fast, poor quality." {
+		t.Fatal("Unexpected string")
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	version := GetVersion()
+	if !strings.Contains(version, "libsamplerate-") {
+		t.Fatal("Unexpected string")
+	}
+}
+
+func TestIsValidRatio(t *testing.T) {
+	if !IsValidRatio(5) {
+		t.Fatal("unexpected result; should be valid")
+	}
+
+	if IsValidRatio(-1) {
+		t.Fatal("unexpected result; should be invalid")
+	}
+
+	if IsValidRatio(257) {
+		t.Fatal("unexpected result; should be invalid")
+	}
+}
+
+func TestErrors(t *testing.T) {
+	channels := 2
+	src, err := New(SRC_SINC_FASTEST, channels)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	errNo := src.ErrorNo()
+	if errNo != 0 {
+		t.Fatal("unexpected error number")
+	}
+
+	errString := src.Error(0)
+	if errString != "No error." {
+		t.Fatal("unexpected Error string")
+	}
+
+	err = Delete(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
