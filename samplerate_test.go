@@ -8,7 +8,7 @@ import (
 
 func TestInitAndDestroy(t *testing.T) {
 	channels := 2
-	src, err := New(SRC_SINC_FASTEST, channels)
+	src, err := New(SRC_SINC_FASTEST, channels, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestInitAndDestroy(t *testing.T) {
 }
 
 func TestProcessInvalidInput(t *testing.T) {
-	src, err := New(SRC_SINC_FASTEST, 2)
+	src, err := New(SRC_SINC_FASTEST, 2, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestProcessInvalidInput(t *testing.T) {
 }
 
 func TestProcess(t *testing.T) {
-	src, err := New(SRC_SINC_FASTEST, 2)
+	src, err := New(SRC_SINC_FASTEST, 2, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestIsValidRatio(t *testing.T) {
 
 func TestErrors(t *testing.T) {
 	channels := 2
-	src, err := New(SRC_SINC_FASTEST, channels)
+	src, err := New(SRC_SINC_FASTEST, channels, 100)
 	if err != nil {
 		t.Fatal(err)
 	}

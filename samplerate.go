@@ -72,11 +72,15 @@ func Delete(src Src) error {
 
 // GetChannels gets the current channel count.
 func (src *Src) GetChannels() (int, error) {
-	cChannels := C.src_get_channels(src.srcState)
-	if cChannels < 0 {
-		return int(cChannels), errors.New("invalid channel count")
-	}
-	return int(cChannels), nil
+	// for version < 1.9
+	return int(src.channels), nil
+
+	// with version 1.9 src_get_channels was added
+	// cChannels := C.src_get_channels(src.srcState)
+	// if cChannels < 0 {
+	// 	return int(cChannels), errors.New("invalid channel count")
+	// }
+	// return int(cChannels), nil
 }
 
 // Reset the internal SRC state. It does not modify the quality settings.
