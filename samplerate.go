@@ -23,11 +23,11 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"reflect"
 )
 
 type Src struct {
 	srcState     *C.SRC_STATE
+	srcData      *C.SRC_DATA
 	channels     C.long
 	inputBuffer  []C.float
 	outputBuffer []C.float
@@ -51,11 +51,20 @@ func New(converterType int, channels int, buffer_len int) (Src, error) {
 		return Src{}, errors.New("Could not initialize")
 	}
 
+	inputBuffer := make([]C.float, buffer_len)
+	outputBuffer := make([]C.float, buffer_len)
+
+	cData := C.alloc_src_data()
+	cData.data_in = &inputBuffer[0]
+	cData.data_out = &outputBuffer[0]
+	cData.output_frames = C.long(len(outputBuffer) / channels)
+
 	src := Src{
 		srcState:     src_state,
+		srcData:      cData,
 		channels:     C.long(cChannels),
-		inputBuffer:  make([]C.float, buffer_len),
-		outputBuffer: make([]C.float, buffer_len),
+		inputBuffer:  inputBuffer,
+		outputBuffer: outputBuffer,
 	}
 
 	return src, nil
@@ -67,6 +76,7 @@ func Delete(src Src) error {
 	if srcState == nil {
 		return nil
 	}
+	C.free_src_data(src.srcData)
 	return errors.New("Could not delete object; It does not exist")
 }
 
@@ -105,33 +115,17 @@ func (src *Src) ErrorNo() int {
 	return int(errNo)
 }
 
-func (src *Src) Process(data interface{}, ratio float64, endOfInput bool) ([]float32, error) {
+func (src *Src) Process(data []float32, ratio float64, endOfInput bool) ([]float32, error) {
 
-	if reflect.TypeOf(data).Kind() != reflect.Slice {
-		return nil, errors.New("not a slice")
-	}
-
-	d := reflect.TypeOf(data).Elem()
-
-	var inputLength int
-
-	switch d.Kind() {
-	case reflect.Float32:
-		inputLength = len(data.([]float32))
-
-		for i, el := range data.([]float32) {
-			src.inputBuffer[i] = C.float(el)
-		}
-	case reflect.Int32:
-		fmt.Println("convert to Float32")
-	case reflect.Int16:
-		fmt.Println("convert to Float32")
-	default:
-		return nil, errors.New("something else")
-	}
+	inputLength := len(data)
 
 	if inputLength == 0 {
 		return nil, errors.New("empty input slice")
+	}
+
+	// copy data into input buffer
+	for i, el := range data {
+		src.inputBuffer[i] = C.float(el)
 	}
 
 	var cEndOfInput = C.int(0)
@@ -141,30 +135,25 @@ func (src *Src) Process(data interface{}, ratio float64, endOfInput bool) ([]flo
 		cEndOfInput = 0
 	}
 
-	cSrcData := C.alloc_src_data()
-	defer C.free_src_data(cSrcData)
-	cSrcData.data_in = &src.inputBuffer[0]
-	cSrcData.data_out = &src.outputBuffer[0]
-	cSrcData.input_frames = C.long(inputLength) / src.channels
-	cSrcData.output_frames = C.long(len(src.outputBuffer)) / src.channels
-	cSrcData.end_of_input = cEndOfInput
-	cSrcData.src_ratio = C.double(ratio)
+	src.srcData.input_frames = C.long(inputLength) / src.channels
+	src.srcData.end_of_input = cEndOfInput
+	src.srcData.src_ratio = C.double(ratio)
 
-	res := C.src_process(src.srcState, cSrcData)
+	res := C.src_process(src.srcState, src.srcData)
 
 	if res != 0 {
 		fmt.Println("Error code: ", res)
 		return nil, errors.New("process not possible")
 	}
 
-	output := make([]float32, 0, cSrcData.output_frames_gen)
+	output := make([]float32, 0, src.srcData.output_frames_gen)
 
 	// fmt.Println("channels:", src.channels)
 	// fmt.Println("input frames", cSrcData.input_frames)
 	// fmt.Println("input used", cSrcData.input_frames_used)
 	// fmt.Println("output generated", cSrcData.output_frames_gen)
 
-	for i := 0; i < int(cSrcData.output_frames_gen*src.channels); i++ {
+	for i := 0; i < int(src.srcData.output_frames_gen*src.channels); i++ {
 		output = append(output, float32(src.outputBuffer[i]))
 	}
 
