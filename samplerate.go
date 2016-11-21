@@ -6,8 +6,8 @@ package samplerate
 #cgo CFLAGS: -I /usr/local/include
 #cgo LDFLAGS: -L /usr/local/lib -lsamplerate
 
-#import <samplerate.h>
-#import <stdlib.h>
+#include <samplerate.h>
+#include <stdlib.h>
 
 SRC_DATA *alloc_src_data() {
     return (SRC_DATA*)malloc(sizeof(SRC_DATA));
