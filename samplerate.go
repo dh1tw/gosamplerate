@@ -41,6 +41,7 @@ const (
 	SRC_LINEAR              = C.SRC_LINEAR
 )
 
+//New initializes the converter object and returns a reference to it.
 func New(converterType int, channels int, buffer_len int) (Src, error) {
 	cConverter := C.int(converterType)
 	cChannels := C.int(channels)
@@ -48,7 +49,7 @@ func New(converterType int, channels int, buffer_len int) (Src, error) {
 
 	src_state := C.src_new(cConverter, cChannels, cErr)
 	if src_state == nil {
-		return Src{}, errors.New("Could not initialize")
+		return Src{}, errors.New("Could not initialize samplerate converter object")
 	}
 
 	inputBuffer := make([]C.float, buffer_len)
@@ -58,6 +59,7 @@ func New(converterType int, channels int, buffer_len int) (Src, error) {
 	cData.data_in = &inputBuffer[0]
 	cData.data_out = &outputBuffer[0]
 	cData.output_frames = C.long(len(outputBuffer) / channels)
+	cData.src_ratio = 1
 
 	src := Src{
 		srcState:     src_state,
@@ -73,15 +75,16 @@ func New(converterType int, channels int, buffer_len int) (Src, error) {
 // Delete cleans up all internal allocations.
 func Delete(src Src) error {
 	srcState := C.src_delete(src.srcState)
+	C.free_src_data(src.srcData)
 	if srcState == nil {
 		return nil
 	}
-	C.free_src_data(src.srcData)
-	return errors.New("Could not delete object; It does not exist")
+	return errors.New("Could not delete object; It did not exist")
 }
 
 // GetChannels gets the current channel count.
 func (src *Src) GetChannels() (int, error) {
+
 	// for version < 1.9
 	return int(src.channels), nil
 
@@ -98,7 +101,9 @@ func (src *Src) GetChannels() (int, error) {
 func (src *Src) Reset() error {
 	res := C.src_reset(src.srcState)
 	if res < 0 {
-		return errors.New("could not reset state")
+		errMsg := fmt.Sprintf("Could not reset samplerate converter state: %s",
+			src.Error(int(res)))
+		return errors.New(errMsg)
 	}
 	return nil
 }
@@ -115,12 +120,13 @@ func (src *Src) ErrorNo() int {
 	return int(errNo)
 }
 
+// Process processes the data provided by the caller using the sample rate object
 func (src *Src) Process(data []float32, ratio float64, endOfInput bool) ([]float32, error) {
 
 	inputLength := len(data)
 
-	if inputLength == 0 {
-		return nil, errors.New("empty input slice")
+	if inputLength > len(src.inputBuffer) {
+		return nil, errors.New("data slice is larger than buffer")
 	}
 
 	// copy data into input buffer
@@ -142,8 +148,8 @@ func (src *Src) Process(data []float32, ratio float64, endOfInput bool) ([]float
 	res := C.src_process(src.srcState, src.srcData)
 
 	if res != 0 {
-		fmt.Println("Error code: ", res)
-		return nil, errors.New("process not possible")
+		errMsg := fmt.Sprintf("Error code: %d; %s", res, src.Error(int(res)))
+		return nil, errors.New(errMsg)
 	}
 
 	output := make([]float32, 0, src.srcData.output_frames_gen)
@@ -160,28 +166,17 @@ func (src *Src) Process(data []float32, ratio float64, endOfInput bool) ([]float
 	return output, nil
 }
 
-// GetName returns the name of a sample rate converter
-func GetName(converter C.int) (string, error) {
-	cConverterName := C.src_get_name(converter)
-	if cConverterName == nil {
-		return "", errors.New("unknown converter")
-	}
-	return C.GoString(cConverterName), nil
-}
+// SetRatio sets the samplerate conversion ratio between input and output samples.
+// Normally, when using (src *SRC) Process or the callback, the libary will try to smoothly
+// transition between the conversion ratio of the last call and the conversion ratio of the next
+// call. This function bypasses this behaviour and achieves a step response in the conversion rate.
+func (src *Src) SetRatio(ratio float64) error {
 
-// GetDescription returns the description of a sample rate converter
-func GetDescription(converter C.int) (string, error) {
-	cConverterDescription := C.src_get_description(converter)
-	if cConverterDescription == nil {
-		return "", errors.New("unknown converter")
+	res := C.src_set_ratio(src.srcState, C.double(ratio))
+	if res != 0 {
+		return errors.New(src.Error(int(res)))
 	}
-	return C.GoString(cConverterDescription), nil
-}
-
-// GetVersion returns the version number of libsamplerate
-func GetVersion() string {
-	cVersion := C.src_get_version()
-	return C.GoString(cVersion)
+	return nil
 }
 
 // IsValidRatio returns True is ratio is a valid conversion ratio, False otherwise.
@@ -191,4 +186,28 @@ func IsValidRatio(ratio float64) bool {
 		return true
 	}
 	return false
+}
+
+// GetName returns the name of a sample rate converter
+func GetName(converter C.int) (string, error) {
+	cConverterName := C.src_get_name(converter)
+	if cConverterName == nil {
+		return "", errors.New("unknown samplerate converter")
+	}
+	return C.GoString(cConverterName), nil
+}
+
+// GetDescription returns the description of a sample rate converter
+func GetDescription(converter C.int) (string, error) {
+	cConverterDescription := C.src_get_description(converter)
+	if cConverterDescription == nil {
+		return "", errors.New("unknown samplerate converter")
+	}
+	return C.GoString(cConverterDescription), nil
+}
+
+// GetVersion returns the version number of libsamplerate
+func GetVersion() string {
+	cVersion := C.src_get_version()
+	return C.GoString(cVersion)
 }
