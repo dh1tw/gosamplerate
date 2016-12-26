@@ -4,8 +4,8 @@
 package gosamplerate
 
 /*
-#cgo CFLAGS: -I /usr/local/include
-#cgo LDFLAGS: -L /usr/local/lib -lsamplerate
+
+#cgo pkg-config: samplerate
 
 #include <samplerate.h>
 #include <stdlib.h>
