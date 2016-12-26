@@ -1,0 +1,12 @@
+language: go
+
+env:
+    - GOARCH=amd64
+
+addons:
+    apt: 
+      packages: 
+         - libsamplerate0
+
+script:
+    - go test
