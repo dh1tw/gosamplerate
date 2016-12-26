@@ -1,9 +1,57 @@
-package samplerate
+package gosamplerate
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func TestGetConverterName(t *testing.T) {
+	name, err := GetName(SRC_LINEAR)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "Linear Interpolator" {
+		t.Fatal("Unexpected string")
+	}
+}
+
+func TestGetConverterNameError(t *testing.T) {
+	_, err := GetName(5)
+	if err == nil {
+		t.Fatal("expected Error")
+	}
+	if err.Error() != "unknown samplerate converter" {
+		t.Fatal("unexpected string")
+	}
+}
+
+func TestGetConverterDescription(t *testing.T) {
+	desc, err := GetDescription(SRC_LINEAR)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if desc != "Linear interpolator, very fast, poor quality." {
+		t.Fatal("Unexpected string")
+	}
+}
+
+func TestGetConverterDescriptionError(t *testing.T) {
+	_, err := GetDescription(5)
+	if err == nil {
+		t.Fatal("expected Error")
+	}
+	if err.Error() != "unknown samplerate converter" {
+		t.Fatal("unexpected string")
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	version := GetVersion()
+	if !strings.Contains(version, "libsamplerate-") {
+		t.Fatal("Unexpected string")
+	}
+}
 
 func TestInitAndDestroy(t *testing.T) {
 	channels := 2
@@ -38,6 +86,37 @@ func TestInvalidSrcObject(t *testing.T) {
 	}
 	if err.Error() != "Could not initialize samplerate converter object" {
 		t.Log("unexpected Error string")
+	}
+}
+
+func TestSimple(t *testing.T) {
+	input := []float32{0.1, -0.5, 0.3, 0.4, 0.1}
+	expectedOutput := []float32{0.1, 0.1, -0.10000001, -0.5, 0.033333343, 0.33333334, 0.4, 0.2}
+
+	output, err := Simple(input, 1.5, 1, SRC_LINEAR)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(output, expectedOutput) {
+		t.Log("input", input)
+		t.Log("output", output)
+		t.Fatal("unexpected output")
+	}
+}
+
+func TestSimpleError(t *testing.T) {
+
+	input := []float32{0.1, 0.9}
+	var invalidRatio float64 = -5.3
+
+	_, err := Simple(input, invalidRatio, 1, SRC_LINEAR)
+	if err == nil {
+		t.Fatal("expected Error")
+	}
+	if err.Error() != "Error code: 6; SRC ratio outside [1/256, 256] range." {
+		t.Log(err.Error())
+		t.Fatal("unexpected string")
 	}
 }
 
@@ -181,7 +260,7 @@ func TestErrors(t *testing.T) {
 		t.Fatal("unexpected error number")
 	}
 
-	errString := src.Error(0)
+	errString := Error(0)
 	if errString != "No error." {
 		t.Fatal("unexpected Error string")
 	}
