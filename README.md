@@ -46,7 +46,9 @@ using [Homebrew](http://brew.sh):
 ```
 
 ## Documentation
-The API of **gosamplerate** can be found at [godoc.org](https://godoc.org/github.com/dh1tw/gosamplerate)
+The API of **gosamplerate** can be found at [godoc.org](https://godoc.org/github.com/dh1tw/gosamplerate). 
+The documentation of libsamplerate (necessary in order to fully understand the API) can be found 
+[here](http://www.mega-nerd.com/SRC/index.html).
 
 ## Tests & Examples
 The test coverage is close to 100%. The tests contain various examples on how to use **gosamplerate**.
