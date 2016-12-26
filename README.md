@@ -1,5 +1,6 @@
 # libsamplerate binding for Golang
 [![Go Report Card](https://goreportcard.com/badge/github.com/dh1tw/gosamplerate)](https://goreportcard.com/report/github.com/dh1tw/gosamplerate)
+[![Build Status](https://travis-ci.org/dh1tw/gosamplerate.svg?branch=master)](https://travis-ci.org/dh1tw/gosamplerate)
 
 This is a [Golang](https://golang.org) binding for [libsamplerate](http://www.mega-nerd.com/SRC/index.html) (written in C), probably the best audio Sample Rate Converter available to today. 
 
