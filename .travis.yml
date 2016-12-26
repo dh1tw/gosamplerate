@@ -2,7 +2,7 @@ language: go
 
 env:
     - GOARCH=amd64
-
+    
 go:
     - 1.6
     - 1.7
@@ -12,6 +12,7 @@ addons:
     apt: 
       packages: 
          - libsamplerate0
+         - libsamplerate0-dev
 
 script:
     - go test
