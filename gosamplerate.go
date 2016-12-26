@@ -1,6 +1,6 @@
 // +build linux,cgo darwin,cgo
 
-// Golang binding for libsamplerate (audio sample rate converter)
+// Package gosamplerate is a golang binding for libsamplerate (audio sample rate converter)
 package gosamplerate
 
 /*
@@ -26,6 +26,7 @@ import (
 	"fmt"
 )
 
+// Src struct holding the data for the full API
 type Src struct {
 	srcState     *C.SRC_STATE
 	srcData      *C.SRC_DATA
@@ -43,7 +44,7 @@ const (
 )
 
 //New initializes the converter object and returns a reference to it.
-func New(converterType int, channels int, buffer_len int) (Src, error) {
+func New(converterType int, channels int, bufferLen int) (Src, error) {
 	cConverter := C.int(converterType)
 	cChannels := C.int(channels)
 	var cErr *C.int
@@ -53,8 +54,8 @@ func New(converterType int, channels int, buffer_len int) (Src, error) {
 		return Src{}, errors.New("Could not initialize samplerate converter object")
 	}
 
-	inputBuffer := make([]C.float, buffer_len)
-	outputBuffer := make([]C.float, buffer_len)
+	inputBuffer := make([]C.float, bufferLen)
+	outputBuffer := make([]C.float, bufferLen)
 
 	cData := C.alloc_src_data()
 	cData.data_in = &inputBuffer[0]
@@ -215,7 +216,7 @@ func (src *Src) Process(dataIn []float32, ratio float64, endOfInput bool) ([]flo
 }
 
 // SetRatio sets the samplerate conversion ratio between input and output samples.
-// Normally, when using (src *SRC) Process or the callback, the libary will try to smoothly
+// Normally, when using (src *SRC) Process or the callback, the library will try to smoothly
 // transition between the conversion ratio of the last call and the conversion ratio of the next
 // call. This function bypasses this behaviour and achieves a step response in the conversion rate.
 func (src *Src) SetRatio(ratio float64) error {
