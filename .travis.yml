@@ -1,5 +1,6 @@
 language: go
 
+sudo: false
 env:
     - GOARCH=amd64
     
@@ -13,6 +14,7 @@ addons:
       packages: 
          - libsamplerate0
          - libsamplerate0-dev
-
+before_install:
+    - go get github.com/mattn/goveralls
 script:
-    - go test
+    - $HOME/gopath/bin/goveralls -service=travis-ci
