@@ -1,5 +1,6 @@
 // +build linux,cgo darwin,cgo
 
+// Golang binding for libsamplerate
 package gosamplerate
 
 /*
