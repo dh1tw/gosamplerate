@@ -2,7 +2,8 @@ language: go
 
 sudo: false
 env:
-    - GOARCH=amd64
+    - GIMME_OS=linux GIMME_ARCH=amd64
+    - GIMME_OS=linux GIMME_ARCH=386
     
 go:
     - 1.6
