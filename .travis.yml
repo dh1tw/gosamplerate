@@ -3,12 +3,10 @@ language: go
 sudo: false
 env:
     - GIMME_OS=linux GIMME_ARCH=amd64
-    - GIMME_OS=linux GIMME_ARCH=i386
+    - GIMME_OS=linux GIMME_ARCH=386
     
 go:
-    - 1.6
     - 1.7
-    - tip
 
 addons:
     apt: 
