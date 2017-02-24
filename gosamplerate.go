@@ -1,5 +1,3 @@
-// +build linux,cgo darwin,cgo
-
 // Package gosamplerate is a golang binding for libsamplerate (audio sample rate converter)
 package gosamplerate
 
