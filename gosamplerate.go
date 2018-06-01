@@ -22,6 +22,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 // Src struct holding the data for the full API
@@ -130,7 +131,13 @@ func Simple(dataIn []float32, ratio float64, channels int, converterType int) ([
 	dataInLength := len(dataIn)
 
 	inputBuffer := make([]C.float, dataInLength)
-	outputBuffer := make([]C.float, dataInLength*int(ratio)+20) // add some margin
+	n := int(math.Ceil(ratio))
+	if n <= 0 {
+		// hack to make sure we can get the pointer to an underlying
+		// array.
+		n = 1
+	}
+	outputBuffer := make([]C.float, dataInLength*n)
 
 	// copy data into input buffer
 	for i, el := range dataIn {
