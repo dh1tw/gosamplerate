@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"unsafe"
 )
 
 // Src struct holding the data for the full API
@@ -130,27 +131,31 @@ func Simple(dataIn []float32, ratio float64, channels int, converterType int) ([
 
 	dataInLength := len(dataIn)
 
-	inputBuffer := make([]C.float, dataInLength)
+	inputBuffer := C.malloc(C.sizeof_float * C.ulong(dataInLength))
+	defer C.free(inputBuffer)
 	n := int(math.Ceil(ratio))
 	if n <= 0 {
 		// hack to make sure we can get the pointer to an underlying
 		// array.
 		n = 1
 	}
-	outputBuffer := make([]C.float, dataInLength*n)
+	outputBuffer := C.malloc(C.sizeof_float * C.ulong(dataInLength*n))
+	defer C.free(outputBuffer)
 
 	// copy data into input buffer
 	for i, el := range dataIn {
-		inputBuffer[i] = C.float(el)
+		p := uintptr(inputBuffer) + uintptr(i*C.sizeof_float)
+		p2 := (*C.float)(unsafe.Pointer(p))
+		*p2 = C.float(el)
 	}
 
 	srcData := C.alloc_src_data()
 	defer C.free_src_data(srcData)
 
-	srcData.data_in = &inputBuffer[0]
-	srcData.data_out = &outputBuffer[0]
+	srcData.data_in = (*C.float)(inputBuffer)
+	srcData.data_out = (*C.float)(outputBuffer)
 	srcData.input_frames = C.long(dataInLength / channels)
-	srcData.output_frames = C.long(cap(outputBuffer) / channels)
+	srcData.output_frames = C.long(dataInLength * n / channels)
 	srcData.src_ratio = cRatio
 
 	res := C.src_simple(srcData, cConverterType, cChannels)
@@ -168,7 +173,7 @@ func Simple(dataIn []float32, ratio float64, channels int, converterType int) ([
 	// fmt.Println("output generated", cSrcData.output_frames_gen)
 
 	for i := 0; i < int(srcData.output_frames_gen*C.long(channels)); i++ {
-		output = append(output, float32(outputBuffer[i]))
+		output = append(output, float32(*(*C.float)(unsafe.Pointer((uintptr(outputBuffer) + uintptr(i*C.sizeof_float))))))
 	}
 
 	return output, nil
