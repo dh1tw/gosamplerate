@@ -1,9 +1,9 @@
 # libsamplerate binding for Golang
 [![Go Report Card](https://goreportcard.com/badge/github.com/dh1tw/gosamplerate)](https://goreportcard.com/report/github.com/dh1tw/gosamplerate)
-[![Build Status](https://travis-ci.org/dh1tw/gosamplerate.svg?branch=master)](https://travis-ci.org/dh1tw/gosamplerate)
+[![Build Status](https://travis-ci.com/dh1tw/gosamplerate.svg?branch=master)](https://travis-ci.com/dh1tw/gosamplerate)
 [![Coverage Status](https://coveralls.io/repos/github/dh1tw/gosamplerate/badge.svg?branch=master)](https://coveralls.io/github/dh1tw/gosamplerate?branch=master)
 
-This is a [Golang](https://golang.org) binding for [libsamplerate](http://www.mega-nerd.com/SRC/index.html) (written in C), probably the best audio Sample Rate Converter available to today. 
+This is a [Golang](https://golang.org) binding for [libsamplerate](http://www.mega-nerd.com/SRC/index.html) (written in C), probably the best audio Sample Rate Converter available to today.
 
 A classical use case is converting audio from a CD sample rate of 44.1kHz to the 48kHz sample rate used by DAT players.
 
@@ -16,7 +16,7 @@ libsamplerate is capable of arbitrary and time varying conversions (max sampling
 - [Full API](http://www.mega-nerd.com/SRC/api_full.html)
 - [Most miscellaneous functions](http://www.mega-nerd.com/SRC/api_misc.html)
 
-not (yet) implemented is: 
+not (yet) implemented is:
 
 - [Callback API](http://www.mega-nerd.com/SRC/api_callback.html)
 
@@ -49,8 +49,8 @@ using [Homebrew](http://brew.sh):
 ```
 
 ## Documentation
-The API of **gosamplerate** can be found at [godoc.org](https://godoc.org/github.com/dh1tw/gosamplerate). 
-The documentation of libsamplerate (necessary in order to fully understand the API) can be found 
+The API of **gosamplerate** can be found at [godoc.org](https://godoc.org/github.com/dh1tw/gosamplerate).
+The documentation of libsamplerate (necessary in order to fully understand the API) can be found
 [here](http://www.mega-nerd.com/SRC/index.html).
 
 ## Tests & Examples
