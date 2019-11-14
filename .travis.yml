@@ -1,9 +1,8 @@
 language: go
-
+dist: trusty
 sudo: false
 env:
     - GOARCH=amd64
-
 go:
     - "1.6"
     - "1.7"
