@@ -240,6 +240,9 @@ func TestGetChannels(t *testing.T) {
 
 func TestSetRatio(t *testing.T) {
 	src, err := New(SRC_LINEAR, 1, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err = src.SetRatio(25.0); err != nil {
 		t.Fatal("unexpected result; should be valid conversion rate")
 	}
@@ -247,6 +250,9 @@ func TestSetRatio(t *testing.T) {
 
 func TestSetRatioInvalid(t *testing.T) {
 	src, err := New(SRC_LINEAR, 1, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = src.SetRatio(-5)
 	if err == nil {
 		t.Fatal("expected Error")
