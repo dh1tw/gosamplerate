@@ -8,8 +8,15 @@ package gosamplerate
 #include <samplerate.h>
 #include <stdlib.h>
 
-SRC_DATA *alloc_src_data() {
-    return (SRC_DATA*)malloc(sizeof(SRC_DATA));
+SRC_DATA *alloc_src_data(float *data_in, float *data_out,
+					long output_frames, double src_ratio) {
+
+	SRC_DATA *src_data = malloc(sizeof(SRC_DATA));
+    src_data->data_in = data_in;
+    src_data->data_out = data_out;
+    src_data->output_frames = output_frames;
+    src_data->src_ratio = src_ratio;
+	return src_data;
 }
 
 void free_src_data(SRC_DATA *p){
@@ -71,11 +78,12 @@ func New(converterType int, channels int, bufferLen int) (Src, error) {
 	inputBuffer := make([]C.float, bufferLen)
 	outputBuffer := make([]C.float, bufferLen)
 
-	cData := C.alloc_src_data()
-	cData.data_in = &inputBuffer[0]
-	cData.data_out = &outputBuffer[0]
-	cData.output_frames = C.long(len(outputBuffer) / channels)
-	cData.src_ratio = 1
+	cData := C.alloc_src_data(
+		&inputBuffer[0],
+		&outputBuffer[0],
+		C.long(len(outputBuffer)/channels),
+		1,
+	)
 
 	src := Src{
 		srcState:     src_state,
