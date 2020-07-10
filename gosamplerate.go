@@ -140,7 +140,7 @@ func (src *Src) ErrorNo() int {
 // capable than the full API (Process()). It must not be used if Audio shall be converted in chunks. For full documentation see: http://www.mega-nerd.com/SRC/api_simple.html
 func Simple(dataIn []float32, ratio float64, channels int, converterType int) ([]float32, error) {
 	if ratio <= 0 {
-		return nil, fmt.Errorf("invalid ratio %f", ratio)
+		return nil, fmt.Errorf("Error code: 6; SRC ratio outside [1/256, 256] range.")
 	}
 	outputBuffer := make([]float32, len(dataIn)*int(math.Ceil(ratio)))
 	var outputFramesGen C.long
