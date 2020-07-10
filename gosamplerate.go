@@ -16,6 +16,21 @@ void free_src_data(SRC_DATA *p){
     free(p);
 }
 
+int run_src_simple(float *data_in, float *data_out,
+                   long input_frames, long output_frames,
+                   double src_ratio, int converter_type, int channels,
+                   long *output_frames_gen) {
+    SRC_DATA src_data;
+    src_data.data_in = data_in;
+    src_data.data_out = data_out;
+    src_data.input_frames = input_frames;
+    src_data.output_frames = output_frames;
+    src_data.src_ratio = src_ratio;
+    int res = src_simple(&src_data, converter_type, channels);
+    *output_frames_gen = src_data.output_frames_gen;
+    return res;
+}
+
 */
 import "C"
 
@@ -122,56 +137,27 @@ func (src *Src) ErrorNo() int {
 }
 
 // Simple converts a single block of samples (one or more channels) in one go. The simple API is less
-// capable than the full API (Process()). It must not be used if Audio shall be converted in junks. For full documentation see: http://www.mega-nerd.com/SRC/api_simple.html
+// capable than the full API (Process()). It must not be used if Audio shall be converted in chunks. For full documentation see: http://www.mega-nerd.com/SRC/api_simple.html
 func Simple(dataIn []float32, ratio float64, channels int, converterType int) ([]float32, error) {
-	cConverterType := C.int(converterType)
-	cChannels := C.int(channels)
-	cRatio := C.double(ratio)
-
-	dataInLength := len(dataIn)
-
-	inputBuffer := make([]C.float, dataInLength)
-	n := int(math.Ceil(ratio))
-	if n <= 0 {
-		// hack to make sure we can get the pointer to an underlying
-		// array.
-		n = 1
+	if ratio <= 0 {
+		return nil, fmt.Errorf("invalid ratio %f", ratio)
 	}
-	outputBuffer := make([]C.float, dataInLength*n)
-
-	// copy data into input buffer
-	for i, el := range dataIn {
-		inputBuffer[i] = C.float(el)
-	}
-
-	srcData := C.alloc_src_data()
-	defer C.free_src_data(srcData)
-
-	srcData.data_in = &inputBuffer[0]
-	srcData.data_out = &outputBuffer[0]
-	srcData.input_frames = C.long(dataInLength / channels)
-	srcData.output_frames = C.long(cap(outputBuffer) / channels)
-	srcData.src_ratio = cRatio
-
-	res := C.src_simple(srcData, cConverterType, cChannels)
-
+	outputBuffer := make([]float32, len(dataIn)*int(math.Ceil(ratio)))
+	var outputFramesGen C.long
+	res := C.run_src_simple(
+		(*C.float)(&dataIn[0]),
+		(*C.float)(&outputBuffer[0]),
+		C.long(len(dataIn)/channels),
+		C.long(cap(outputBuffer)/channels),
+		C.double(ratio),
+		C.int(converterType),
+		C.int(channels),
+		&outputFramesGen)
 	if res != 0 {
 		errMsg := fmt.Sprintf("Error code: %d; %s", res, Error(int(res)))
 		return nil, errors.New(errMsg)
 	}
-
-	output := make([]float32, 0, srcData.output_frames_gen)
-
-	// fmt.Println("channels:", src.channels)
-	// fmt.Println("input frames", cSrcData.input_frames)
-	// fmt.Println("input used", cSrcData.input_frames_used)
-	// fmt.Println("output generated", cSrcData.output_frames_gen)
-
-	for i := 0; i < int(srcData.output_frames_gen*C.long(channels)); i++ {
-		output = append(output, float32(outputBuffer[i]))
-	}
-
-	return output, nil
+	return outputBuffer[:int(outputFramesGen)*channels], nil
 }
 
 // Process is known as the full API. It allows time varying sample rate conversion on streaming data on one or more channels. For full documentation see: http://www.mega-nerd.com/SRC/api_full.html
