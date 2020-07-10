@@ -1,5 +1,5 @@
 language: go
-dist: trusty
+dist: xenial
 sudo: false
 env:
     - GOARCH=amd64
@@ -12,6 +12,7 @@ go:
     - "1.11"
     - "1.12"
     - "1.13"
+    - "1.14"
     - tip
 
 addons:
