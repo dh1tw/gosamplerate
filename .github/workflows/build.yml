@@ -23,7 +23,7 @@ jobs:
     -
       name: Install dependencies
       run: |
-        sudo apt install libsamperate libsamplerate-dev
+        sudo apt install libsamplerate0 libsamplerate0-dev
     -
       name: Compile
       run: go build
