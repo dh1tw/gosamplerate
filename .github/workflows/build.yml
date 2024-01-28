@@ -1,0 +1,29 @@
+name: Cross Platform build
+
+on: [push, pull_request]
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        go: ["1.6", "1.7", "1.8", "1.9", "1.10", "1.11", "1.12", "1.13", "1.14", "1.15", "1.16", "1.17", "1.18", "1.19", "1.20", "1.21"]
+    steps:
+    -
+      name: Set up Go ${{ matrix.go }}
+      uses: actions/setup-go@v4
+      id: go
+      with:
+        go-version: ${{ matrix.go }}
+    -
+      name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    -
+      name: Install dependencies
+      run: |
+        sudo apt install libsamperate0 libsamplerate0-dev
+    -
+      name: Compile
+      run: go build
