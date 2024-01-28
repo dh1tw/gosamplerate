@@ -27,3 +27,6 @@ jobs:
     -
       name: Compile
       run: go build
+    -
+      name: Execute Unit Tests 
+      run: go test ./...
