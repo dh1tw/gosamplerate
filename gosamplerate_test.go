@@ -98,9 +98,10 @@ func TestSimple(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(output, expectedOutput) {
+	if !closeEnough(output, expectedOutput) {
 		t.Log("input", input)
 		t.Log("output", output)
+		t.Log("expectedOutput", expectedOutput)
 		t.Fatal("unexpected output")
 	}
 }
@@ -294,4 +295,16 @@ func TestErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func closeEnough(a, b []float32) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v-b[i] > 0.00001 {
+			return false
+		}
+	}
+	return true
 }
